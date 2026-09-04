@@ -1,7 +1,13 @@
 from fastapi import FastAPI, WebSocket
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 connected_clients = []
+
+@app.get("/")
+def homepage():
+    with open("index.html") as f:
+        return HTMLResponse(f.read())
 
 @app.websocket("/ws")
 async def chat_endpoint(websocket: WebSocket):
