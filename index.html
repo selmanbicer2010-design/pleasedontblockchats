@@ -7,6 +7,9 @@
         font-family: sans-serif;
         padding: 0%;
       }
+      p {
+        font-family: sans-serif;
+      }
       #input_messagebox {
           position: absolute;
           left: 2%;
@@ -32,11 +35,12 @@
       }
     </style>
 
-    <input id="input_namesetter" type="text" placeholder="Enter your name here">
+    <input id="input_nametextbox" type="text" placeholder="Enter your name here">
     <button id="button_nameset" onclick="setName()">Change name</button>
 
-    <input id="input_messagebox" type="text" placeholder="Send a message...">
+    <input id="input_messagetextbox" type="text" placeholder="Send a message...">
     <button id="button_messagesend" onclick="sendMessage()">Send</button>
+
     <ul id="ul_messagelist"></ul>
 
     <script>
@@ -44,22 +48,31 @@
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
     let messages = [];
-    let name = "Anonymous";
+    let name = "__NONAMESET__";
 
-    const namesetter = document.getElementById("input_namesetter");
-    const messagebox = document.getElementById("input_messagebox");
+    const nametextbox = document.getElementById("input_nametextbox");
+    const nameset = document.getElementById("button_nameset");
+
+    const messagetextbox = document.getElementById("input_messagetextbox");
+    const messagesend = document.getElementById("button_messagesend");
+
     const messagelist = document.getElementById("ul_messagelist");
 
-    messagebox.addEventListener("keydown", function(e) {
-      if (e.key == "Enter")
-        {
+    nametextbox.addEventListener("keydown", function(e) {
+      if (e.key == "Enter") {
+          setName();
+        }
+    });
+
+    messagetextbox.addEventListener("keydown", function(e) {
+      if (e.key == "Enter") {
           sendMessage();
         }
     });
 
     function setName() {
-      name = namesetter.value;
-      namesetter.placeholder = "Currently chatting as " + name;
+      name = nametextbox.value;
+      nametextbox.placeholder = "Currently chatting as " + name;
     }
 
     socket.onmessage = function(event) {
@@ -68,7 +81,14 @@
     };
 
     function sendMessage() {
-      let msg = name + ": " + messagebox.value;
+      if (name == "__NONAMESET__") {
+        const p = document.createElement("p");
+        p.textContent = "Set a name first!";
+        setTimeout(function() {
+          p.remove();
+        }, 2000);
+      }
+      let msg = name + ": " + messagetextbox.value;
       if (SERVER_CONNECTED) {
         socket.send(msg);
       }
@@ -76,7 +96,7 @@
         messages.push(msg);
         render();
       }
-      messagebox.value = "";
+      messagetextbox.value = "";
     }
 
     function render() {
