@@ -86,6 +86,10 @@
       if (name == defaultname) {
         const p = document.createElement("p");
         p.textContent = "Set a name first!";
+        p.style.position = "absolute";
+        p.style.left = "50%";
+        p.style.top = "50%";
+        document.body.appendChild(p);
         setTimeout(function() {
           p.remove();
         }, 2000);
