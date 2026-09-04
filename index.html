@@ -135,7 +135,22 @@
         return;
       }
       const messagetextbox = textingscene.elements.messagetextbox;
+      if (messagetextbox.value.trim() == "") return;
       let msg = name + ": " + messagetextbox.value;
+      //required special cases
+      // if (name == "halil" || name == "Halil")
+      // {
+      //   msg = "halil: i owe selman 30 dollars";
+      // }
+      // if (name == "charles" || name == "c4" || name == "ch4" || name == "Charles")
+      // {
+      //   msg = "charles: i owe selman 10 dollars";
+      // }
+      // if (name == "joe" || name == "Joe" || name == "joseph" || name == "Joseph")
+      // {
+      //   msg = "joe: i owe selman 12.25 dollars... and a true loves kiss";
+      // }
+
       if (SERVER_CONNECTED) {
         socket.send(msg);
       }
