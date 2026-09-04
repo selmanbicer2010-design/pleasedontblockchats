@@ -39,6 +39,13 @@
 <body>
     <script>
 
+    let userId = localStorage.getItem("userId");
+
+    if (!userId) {
+        userId = crypto.randomUUID();
+        localStorage.setItem("userId", userId);
+    }
+
     const SERVER_CONNECTED = true;
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
@@ -101,6 +108,16 @@
       });
 
       const messagelist = createDocumentElement("ul_messagelist", "ul");
+
+      const logo = createDocumentElement("logo", "img", function(e) {
+        e.src = "images/plsdontblockchats.png";
+        e.alt = "pleasedontblockchats.com logo";
+        e.style.width = "10%";
+          e.style.height = "auto";
+          e.style.position = "absolute";
+          e.style.left = "85%";
+          e.style.top = "2%";
+      });
 
       return {
           nametextbox,
