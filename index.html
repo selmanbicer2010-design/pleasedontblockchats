@@ -14,10 +14,10 @@
           width: 80%;
       }
       #button_messagesend {
-          position: absolute;
-          left: 84%;
-          top: 95%;
-          width: 14%;
+        position: absolute;
+        left: 84%;
+        top: 95%;
+        width: 14%;
       }
       #ul_messagelist {
         position: absolute;
@@ -27,6 +27,8 @@
         max-height: 80%;
         overflow-y: auto;
         list-style: none;
+        display: flex;
+        flex-direction: column-reverse;
       }
     </style>
 
@@ -51,7 +53,6 @@
     }
 
     socket.onmessage = function(event) {
-      console.log("GOT MESSAGE:", event.data);
       messages.push(event.data);
       render();
     };
