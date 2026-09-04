@@ -51,6 +51,7 @@
     }
 
     socket.onmessage = function(event) {
+      console.log("GOT MESSAGE:", event.data);
       messages.push(event.data);
       render();
     };
