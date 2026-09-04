@@ -36,16 +36,9 @@
       }
     </style>
 
-    <input id="input_nametextbox" type="text" placeholder="Enter your name here">
-    <button id="button_nameset" onclick="setName()">Change name</button>
-
-    <input id="input_messagetextbox" type="text" placeholder="Send a message...">
-    <button id="button_messagesend" onclick="sendMessage()">Send</button>
-
-    <ul id="ul_messagelist"></ul>
-
     <script>
-    const SERVER_CONNECTED = true
+
+    const SERVER_CONNECTED = true;
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
     const defaultname = "__NONAMESET__";
@@ -53,49 +46,94 @@
     let messages = [];
     let name = defaultname;
 
-    const nametextbox = document.getElementById("input_nametextbox");
-    const nameset = document.getElementById("button_nameset");
+    const NULL_SCENE = 0;
+    const TEXTING_SCENE = 1;
 
-    const messagetextbox = document.getElementById("input_messagetextbox");
-    const messagesend = document.getElementById("button_messagesend");
+    let CURRENT_SCENE = NULL_SCENE;
 
-    const messagelist = document.getElementById("ul_messagelist");
+    class Scene {
+      constructor(sceneenum, func) {
+        this.sceneenum = sceneenum;
+        this.func = func;
+        this.elements = null;
 
-    nametextbox.addEventListener("keydown", function(e) {
-      if (e.key == "Enter") {
-          setName();
-        }
-    });
+      }
 
-    messagetextbox.addEventListener("keydown", function(e) {
-      if (e.key == "Enter") {
-          sendMessage();
-        }
+      load() {
+        this.elements = this.func();
+        CURRENT_SCENE = this.sceneenum;
+      }
+    }
+
+    function loadScene(scene) {
+      document.body.innerHTML = '';
+      scene.load();
+    }
+
+    function createDocumentElement(name, objecttype, func = function(e){}) {
+      const object = document.createElement(objecttype);
+      func(object);
+      object.id = name;
+      document.body.appendChild(object);
+      return object;
+    }
+
+    const textingscene = new Scene(TEXTING_SCENE, function() {
+      const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
+        e.type = "text";
+        e.placeholder = "Enter your name here...";
+        e.addEventListener("keydown", function(e) { if (e.key == "Enter") { setName(); } });
+      });
+
+      const nameset = createDocumentElement("button_nameset", "button", function(e) {
+        e.textContent = "Set name";
+        e.onclick = setName;
+      });
+      const messagetextbox = createDocumentElement("input_messagetextbox", "input", function(e) {
+        e.type = "text";
+        e.placeholder = "Enter your message here...";
+        e.addEventListener("keydown", function(e) { if (e.key == "Enter") { sendMessage(); } });
+      });
+      const messagesend = createDocumentElement("button_messagesend", "button", function(e) {
+        e.textContent = "Send";
+        e.onclick = sendMessage;
+      });
+
+      const messagelist = createDocumentElement("ul_messagelist", "ul");
+
+      return {
+          nametextbox,
+          messagetextbox,
+          messagelist
+        };
     });
 
     function setName() {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
+      const nametextbox = textingscene.elements.nametextbox;
       name = nametextbox.value;
       nametextbox.placeholder = "Currently chatting as " + name;
     }
 
     socket.onmessage = function(event) {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
       messages.push(event.data);
       render();
     };
 
     function sendMessage() {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
       if (name == defaultname) {
-        const p = document.createElement("p");
-        p.textContent = "Set a name first!";
-        p.style.position = "absolute";
-        p.style.left = "50%";
-        p.style.top = "50%";
-        document.body.appendChild(p);
-        setTimeout(function() {
-          p.remove();
-        }, 2000);
+        createDocumentElement("warning", "p", function(e) {
+          e.textContent = "Set a name first!";
+          e.style.position = "absolute";
+          e.style.left = "50%";
+          e.style.top = "50%";
+          setTimeout(function() { e.remove(); }, 2000);
+        });
         return;
       }
+      const messagetextbox = textingscene.elements.messagetextbox;
       let msg = name + ": " + messagetextbox.value;
       if (SERVER_CONNECTED) {
         socket.send(msg);
@@ -108,6 +146,8 @@
     }
 
     function render() {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
+      const messagelist = textingscene.elements.messagelist;
       messagelist.innerHTML = "";
       for (let i = messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
@@ -115,6 +155,7 @@
         messagelist.appendChild(li);
       }
     }
+
     </script>
 
 </body>
