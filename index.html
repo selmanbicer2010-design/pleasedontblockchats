@@ -47,8 +47,10 @@
     const SERVER_CONNECTED = true
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
+    const defaultname = "__NONAMESET__";
+
     let messages = [];
-    let name = "__NONAMESET__";
+    let name = defaultname;
 
     const nametextbox = document.getElementById("input_nametextbox");
     const nameset = document.getElementById("button_nameset");
@@ -81,12 +83,13 @@
     };
 
     function sendMessage() {
-      if (name == "__NONAMESET__") {
+      if (name == defaultname) {
         const p = document.createElement("p");
         p.textContent = "Set a name first!";
         setTimeout(function() {
           p.remove();
         }, 2000);
+        return;
       }
       let msg = name + ": " + messagetextbox.value;
       if (SERVER_CONNECTED) {
