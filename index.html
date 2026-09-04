@@ -1,12 +1,35 @@
 <!DOCTYPE html>
 <html>
 <body>
-    <input id="namesetterbox" type="text" placeholder="Enter your name here">
-    <button onclick="setName()">Change name</button>
 
-    <input id="entrybox" type="text" placeholder="Send a message...">
-    <button onclick="sendMessage()">Send</button>
-    <ul id="messagelist"></ul>
+    <style>
+      li {
+        font-family: sans-serif;
+        padding: 4px;
+      }
+      #ul_messagelist {
+        list-style: none;
+      }
+      #input_messagebox {
+          position: absolute;
+          left: 2%;
+          top: 90%;
+          width: 70%;
+      }
+      #button_nameset {
+          position: absolute;
+          left: 74%;
+          top: 90%;
+          width: 24%;
+      }
+    </style>
+
+    <input id="input_namesetter" type="text" placeholder="Enter your name here">
+    <button id="button_nameset" onclick="setName()">Change name</button>
+
+    <input id="input_messagebox" type="text" placeholder="Send a message...">
+    <button id="button_messagesend" onclick="sendMessage()">Send</button>
+    <ul id="ul_messagelist"></ul>
 
     <script>
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
@@ -15,7 +38,7 @@
     let name = "Anonymous";
 
     function setName() {
-      const inputbox = document.getElementById("namesetterbox");
+      const inputbox = document.getElementById("input_namesetter");
       name = inputbox.value;
       inputbox.placeholder = "Currently chatting as " + name;
     }
@@ -26,13 +49,13 @@
     };
 
     function sendMessage() {
-      const inputbox = document.getElementById("entrybox");
+      const inputbox = document.getElementById("input_messagebox");
       socket.send(name + ": " + inputbox.value);
       inputbox.value = "";
     }
 
     function render() {
-      const list = document.getElementById("messagelist");
+      const list = document.getElementById("ul_messagelist");
       list.innerHTML = "";
       for (let i = messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
