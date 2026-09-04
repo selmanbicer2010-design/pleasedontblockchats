@@ -35,6 +35,7 @@
       const list = document.getElementById("messagelist");
       list.innerHTML = "";
       for (let i = 0; i < messages.length; i++) {
+        i = messages.length - i;
         const li = document.createElement("li");
         li.textContent = messages[i];
         list.appendChild(li);

@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 connected_clients = []
+message_history = []
 
 @app.get("/")
 def homepage():
@@ -13,6 +14,9 @@ def homepage():
 async def chat_endpoint(websocket: WebSocket):
     await websocket.accept()
     connected_clients.append(websocket)
+
+    for old_message in message_history:
+        await websocket.send_text(old_message)
 
     while True:
         message = await websocket.receive_text()
