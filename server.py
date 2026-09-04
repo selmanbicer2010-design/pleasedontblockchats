@@ -1,9 +1,12 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 connected_clients = []
 message_history = []
+
+app.mount("/images", StaticFiles(directory="images"), name="images")
 
 @app.get("/")
 def homepage():
