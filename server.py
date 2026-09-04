@@ -20,5 +20,6 @@ async def chat_endpoint(websocket: WebSocket):
 
     while True:
         message = await websocket.receive_text()
+        message_history.append(message)
         for client in connected_clients:
             await client.send_text(message)
