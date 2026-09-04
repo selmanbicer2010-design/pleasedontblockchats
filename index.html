@@ -46,10 +46,13 @@
     let messages = [];
     let name = "Anonymous";
 
+    const namesetter = document.getElementById("input_namesetter");
+    const messagebox = document.getElementById("input_messagebox");
+    const messagelist = document.getElementById("ul_messagelist");
+
     function setName() {
-      const inputbox = document.getElementById("input_namesetter");
-      name = inputbox.value;
-      inputbox.placeholder = "Currently chatting as " + name;
+      name = namesetter.value;
+      namesetter.placeholder = "Currently chatting as " + name;
     }
 
     socket.onmessage = function(event) {
@@ -58,8 +61,7 @@
     };
 
     function sendMessage() {
-      const inputbox = document.getElementById("input_messagebox");
-      let msg = name + ": " + inputbox.value;
+      let msg = name + ": " + messagebox.value;
       if (SERVER_CONNECTED) {
         socket.send(msg);
       }
@@ -67,12 +69,11 @@
         messages.push(msg);
         render();
       }
-      inputbox.value = "";
+      messagebox.value = "";
     }
 
     function render() {
-      const list = document.getElementById("ul_messagelist");
-      list.innerHTML = "";
+      messagelist.innerHTML = "";
       for (let i = 0; i < messages.length; i++) {
         const li = document.createElement("li");
         li.textContent = messages[i];
