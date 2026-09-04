@@ -50,6 +50,13 @@
     const messagebox = document.getElementById("input_messagebox");
     const messagelist = document.getElementById("ul_messagelist");
 
+    messagebox.addEventListener("keydown", function(e) {
+      if (e.key == "Enter")
+        {
+          sendMessage();
+        }
+    });
+
     function setName() {
       name = namesetter.value;
       namesetter.placeholder = "Currently chatting as " + name;
