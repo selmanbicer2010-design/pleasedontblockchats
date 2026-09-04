@@ -7,9 +7,6 @@
         font-family: sans-serif;
         padding: 0%;
       }
-      #ul_messagelist {
-        list-style: none;
-      }
       #input_messagebox {
           position: absolute;
           left: 2%;
@@ -27,10 +24,9 @@
         bottom: 10%;
         left: 2%;
         width: 90%;
-        display: flex;
-        flex-direction: column-reverse;
         max-height: 80%;
         overflow-y: auto;
+        list-style: none;
       }
     </style>
 
@@ -42,7 +38,7 @@
     <ul id="ul_messagelist"></ul>
 
     <script>
-    const SERVER_CONNECTED = true
+    const SERVER_CONNECTED = false
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
     let messages = [];
