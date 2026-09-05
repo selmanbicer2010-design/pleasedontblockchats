@@ -160,8 +160,7 @@
     const textingscene = new Scene(TEXTING_SCENE, function() {
       const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
         e.type = "text";
-        e.placeholder = "Enter your name here...";
-        e.value = username;
+        e.placeholder = "Currently chatting as " + client.username;
         e.addEventListener("keydown", function(e) { if (e.key == "Enter") { setName(); } });
         e.style.width = "20%";
         e.style.height = "auto";
@@ -263,11 +262,14 @@
         });
         return;
       }
+      let oldusername = client.username;
       client.username = nametextbox.value;
       localStorage.setItem("username", client.username);
       nametextbox.placeholder = "Currently chatting as " + client.username;
       const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
       client.socketsend(nameset)
+      const message = new ClientSideClientTextInfo("chat", { sender: "System", body: oldusername + " has changed their username to " + client.username });
+      client.socketsend(message);
     }
 
     function sendMessage() {

@@ -143,7 +143,7 @@ async def chat_endpoint(websocket: WebSocket):
                 server.application.userlist[server.application.userlist.index(before)] = client.username
                 await server.sendtexteachclient(message)
             if parsed["type"] == "chat":
-                message = ServerSideClientTextInfo("chat", {"sender": client.username, "body": parsed["body"]})
+                message = ServerSideClientTextInfo("chat", {"sender": parsed["sender"], "body": parsed["body"]})
                 server.application.messagehistory.append(message)
                 await server.sendtexteachclient(message)
 
