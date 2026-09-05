@@ -38,6 +38,30 @@
 </head>
 <body>
     <script>
+    class Client {
+      constructor(websocket, uuid, username) {
+        this.websocket = websocket;
+        this.uuid = uuid;
+        this.username = username;
+      }
+    }
+
+    class ClientSideClientTextInfo {
+      constructor(msgtype, jsobj) {
+        const jsobjcopy = { ...jsobj };
+        jsobjcopy.type = msgtype;
+        this.dict_ = jsobjcopy;
+        this.data_ = JSON.stringify(jsobjcopy);
+      }
+
+      jsonstr() {
+        return this.data_;
+      }
+
+      dict() {
+        return this.dict_;
+      }
+    }
 
     let userId = localStorage.getItem("userId");
 
@@ -46,13 +70,24 @@
         localStorage.setItem("userId", userId);
     }
 
-    const SERVER_CONNECTED = true;
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
 
-    const defaultname = "__NONAMESET__";
+    const client = new Client(socket, userId, "");
+
+    socket.onopen = function() {
+      const identify = new ClientSideClientTextInfo("identify", { userId: userId });
+      socket.send(identify.jsonstr());
+    }
+
+    socket.onmessage = function(event) {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
+      const parsed = JSON.parse(event.data);
+      const info = new ClientSideClientTextInfo(parsed.type, parsed);
+      messages.push(info);
+      render();
+    };
 
     let messages = [];
-    let name = defaultname;
 
     const NULL_SCENE = 0;
     const TEXTING_SCENE = 1;
@@ -129,19 +164,25 @@
     function setName() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const nametextbox = textingscene.elements.nametextbox;
-      name = nametextbox.value;
-      nametextbox.placeholder = "Currently chatting as " + name;
+      if (nametextbox.value.trim() == "") {
+        createDocumentElement("warning", "p", function(e) {
+          e.textContent = "Set a valid name first!";
+          e.style.position = "absolute";
+          e.style.left = "50%";
+          e.style.top = "50%";
+          setTimeout(function() { e.remove(); }, 2000);
+        });
+        return;
+      }
+      client.username = nametextbox.value;
+      nametextbox.placeholder = "Currently chatting as " + client.username;
+      const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
+      socket.send(nameset.jsonstr())
     }
-
-    socket.onmessage = function(event) {
-      if (CURRENT_SCENE != TEXTING_SCENE) return;
-      messages.push(event.data);
-      render();
-    };
 
     function sendMessage() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
-      if (name == defaultname) {
+      if (client.username.trim() == "") {
         createDocumentElement("warning", "p", function(e) {
           e.textContent = "Set a name first!";
           e.style.position = "absolute";
@@ -153,28 +194,8 @@
       }
       const messagetextbox = textingscene.elements.messagetextbox;
       if (messagetextbox.value.trim() == "") return;
-      let msg = name + ": " + messagetextbox.value;
-      //required special cases
-      // if (name == "halil" || name == "Halil")
-      // {
-      //   msg = "halil: i owe selman 30 dollars";
-      // }
-      // if (name == "charles" || name == "c4" || name == "ch4" || name == "Charles")
-      // {
-      //   msg = "charles: i owe selman 10 dollars";
-      // }
-      // if (name == "joe" || name == "Joe" || name == "joseph" || name == "Joseph")
-      // {
-      //   msg = "joe: i owe selman 12.25 dollars... and a true loves kiss";
-      // }
-
-      if (SERVER_CONNECTED) {
-        socket.send(msg);
-      }
-      else {
-        messages.push(msg);
-        render();
-      }
+      const message = new ClientSideClientTextInfo("chat", { sender: client.username, body: messagetextbox.value });
+      socket.send(message.jsonstr());
       messagetextbox.value = "";
     }
 
@@ -184,7 +205,7 @@
       messagelist.innerHTML = "";
       for (let i = messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
-        li.textContent = messages[i];
+        li.textContent = messages[i].sender + ": " + messages[i].body;
         messagelist.appendChild(li);
       }
     }
@@ -192,6 +213,5 @@
     loadScene(textingscene);
 
     </script>
-
 </body>
 </html>

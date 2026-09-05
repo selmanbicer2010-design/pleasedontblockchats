@@ -1,39 +1,93 @@
+import json
+from sqlite3.dbapi2 import connect as sqconnect
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
-connected_clients = []
-message_history = []
+class Server:
+    def __init__(self):
+        self.app = FastAPI()
+        self.messagehistory = []
+        self.connectedclients = {}
+        self.deadclients = []
 
-app.mount("/images", StaticFiles(directory="images"), name="images")
+    def connect(self, client):
+        self.connectedclients[client.websocket] = client
 
-@app.get("/")
+    def disconnect(self, client):
+        del self.connectedclients[client.websocket]
+
+    def killclient(self, client):
+        self.deadclients.append(client)
+
+    def cleanclients(self):
+        for dead in self.deadclients:
+            self.disconnect(dead)
+        self.deadclients.clear()
+
+server = Server()
+
+class Client:
+    def __init__(self, websocket, uuid, username):
+        self.websocket = websocket
+        self.uuid = uuid
+        self.username = username
+
+    async def sendtext(self, message):
+        await self.websocket.send_text(message)
+
+    async def receivedtext(self):
+        return await self.websocket.receive_text()
+
+class ServerSideClientTextInfo:
+    def __init__(self, msgtype, datadict):
+        data = dict(datadict)
+        data["type"] = msgtype
+        self.msgtype = msgtype
+        self.dict_ = data
+        self.data_ = json.dumps(data)
+
+    def jsonstr(self):
+        return self.data_
+
+    def dict(self):
+        return self.dict_
+
+server.app.mount("/images", StaticFiles(directory="images"), name="images")
+
+@server.app.get("/")
 def homepage():
     with open("index.html") as f:
         return HTMLResponse(f.read())
 
-@app.websocket("/ws")
+@server.app.websocket("/ws")
 async def chat_endpoint(websocket: WebSocket):
     await websocket.accept()
-    connected_clients.append(websocket)
+    client = Client(websocket, 0, "")
+    server.connect(client)
 
-    for old_message in message_history:
-        await websocket.send_text(old_message)
+    for oldmessage in server.messagehistory:
+        await client.sendtext(oldmessage)
 
     try:
         while True:
-            message = await websocket.receive_text()
-            message_history.append(message)
+            strdata = await client.receivedtext()
+            parsed = json.loads(strdata)
 
-            dead_clients = []
-            for client in connected_clients:
-                try:
-                    await client.send_text(message)
-                except Exception:
-                    dead_clients.append(client)
+            if parsed["type"] == "identify":
+                client.uuid = parsed["userId"]
+            if parsed["type"] == "nameset":
+                client.username = parsed["newname"]
+            if parsed["type"] == "chat":
+                message = ServerSideClientTextInfo("chat", {"sender": client.username, "body": parsed["body"]})
+                server.messagehistory.append(message.jsonstr())
+                for connectedclient in server.connectedclients.values():
+                    try:
+                        await connectedclient.sendtext(message.jsonstr())
+                    except Exception:
+                        server.killclient(connectedclient)
 
-            for dead in dead_clients:
-                connected_clients.remove(dead)
+            server.cleanclients()
     except WebSocketDisconnect:
-        connected_clients.remove(websocket)
+        server.disconnect(client)

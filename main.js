@@ -1,0 +1,174 @@
+
+class Client {
+  constructor(websocket, uuid, username) {
+    this.websocket = websocket;
+    this.uuid = uuid;
+    this.username = username;
+  }
+}
+
+class ClientSideClientTextInfo {
+  constructor(msgtype, jsobj) {
+    const jsobjcopy = { ...jsobj };
+    jsobjcopy.type = msgtype;
+    this.dict_ = jsobjcopy;
+    this.data_ = JSON.stringify(jsobjcopy);
+  }
+
+  jsonstr() {
+    return this.data_;
+  }
+
+  dict() {
+    return this.dict_;
+  }
+}
+
+let userId = localStorage.getItem("userId");
+
+if (!userId) {
+    userId = crypto.randomUUID();
+    localStorage.setItem("userId", userId);
+}
+
+const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
+
+const client = new Client(socket, userId, "");
+
+socket.onopen = function() {
+  const identify = new ClientSideClientTextInfo("identify", { userId: userId });
+  socket.send(identify.jsonstr());
+}
+
+socket.onmessage = function(event) {
+  if (CURRENT_SCENE != TEXTING_SCENE) return;
+  const parsed = JSON.parse(event.data);
+  const info = new ClientSideClientTextInfo(parsed.type, parsed);
+  messages.push(info.jsonstr());
+  render();
+};
+
+let messages = [];
+
+const NULL_SCENE = 0;
+const TEXTING_SCENE = 1;
+
+let CURRENT_SCENE = NULL_SCENE;
+
+class Scene {
+  constructor(sceneenum, func) {
+    this.sceneenum = sceneenum;
+    this.func = func;
+    this.elements = null;
+
+  }
+
+  load() {
+    this.elements = this.func();
+    CURRENT_SCENE = this.sceneenum;
+  }
+}
+
+function loadScene(scene) {
+  document.body.innerHTML = '';
+  scene.load();
+}
+
+function createDocumentElement(name, objecttype, func = function(e){}) {
+  const object = document.createElement(objecttype);
+  func(object);
+  object.id = name;
+  document.body.appendChild(object);
+  return object;
+}
+
+const textingscene = new Scene(TEXTING_SCENE, function() {
+  const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
+    e.type = "text";
+    e.placeholder = "Enter your name here...";
+    e.addEventListener("keydown", function(e) { if (e.key == "Enter") { setName(); } });
+  });
+
+  const nameset = createDocumentElement("button_nameset", "button", function(e) {
+    e.textContent = "Set name";
+    e.onclick = setName;
+  });
+  const messagetextbox = createDocumentElement("input_messagetextbox", "input", function(e) {
+    e.type = "text";
+    e.placeholder = "Enter your message here...";
+    e.addEventListener("keydown", function(e) { if (e.key == "Enter") { sendMessage(); } });
+  });
+  const messagesend = createDocumentElement("button_messagesend", "button", function(e) {
+    e.textContent = "Send";
+    e.onclick = sendMessage;
+  });
+
+  const messagelist = createDocumentElement("ul_messagelist", "ul");
+
+  const logo = createDocumentElement("logo", "img", function(e) {
+    e.src = "images/plsdontblockchats.png";
+    e.alt = "pleasedontblockchats.com logo";
+    e.style.width = "10%";
+    e.style.height = "auto";
+    e.style.position = "absolute";
+    e.style.left = "85%";
+    e.style.top = "2%";
+  });
+
+  return {
+      nametextbox,
+      messagetextbox,
+      messagelist
+    };
+});
+
+function setName() {
+  if (CURRENT_SCENE != TEXTING_SCENE) return;
+  const nametextbox = textingscene.elements.nametextbox;
+  if (nametextbox.value.trim() == "") {
+    createDocumentElement("warning", "p", function(e) {
+      e.textContent = "Set a valid name first!";
+      e.style.position = "absolute";
+      e.style.left = "50%";
+      e.style.top = "50%";
+      setTimeout(function() { e.remove(); }, 2000);
+    });
+    return;
+  }
+  client.name = nametextbox.value;
+  nametextbox.placeholder = "Currently chatting as " + client.name;
+  const nameset = new ClientSideClientTextInfo("nameset", { newname: client.name })
+  socket.send(nameset.jsonstr())
+}
+
+function sendMessage() {
+  if (CURRENT_SCENE != TEXTING_SCENE) return;
+  if (client.name.trim() == "") {
+    createDocumentElement("warning", "p", function(e) {
+      e.textContent = "Set a name first!";
+      e.style.position = "absolute";
+      e.style.left = "50%";
+      e.style.top = "50%";
+      setTimeout(function() { e.remove(); }, 2000);
+    });
+    return;
+  }
+  const messagetextbox = textingscene.elements.messagetextbox;
+  if (messagetextbox.value.trim() == "") return;
+  const message = new ClientSideClientTextInfo("chat", { sender: client.name, body: messagetextbox.value });
+  socket.send(message.jsonstr());
+  messagetextbox.value = "";
+}
+
+function render() {
+  if (CURRENT_SCENE != TEXTING_SCENE) return;
+  const messagelist = textingscene.elements.messagelist;
+  messagelist.innerHTML = "";
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const li = document.createElement("li");
+    li.textContent = messages[i].dict().sender + ": " + messages[i].dict().body;
+    messagelist.appendChild(li);
+  }
+}
+
+loadScene(textingscene);
