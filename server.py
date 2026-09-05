@@ -27,6 +27,7 @@ class Server:
         self.deadclients.clear()
 
 server = Server()
+app = server.app
 
 class Client:
     def __init__(self, websocket, uuid, username):
