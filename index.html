@@ -90,12 +90,14 @@
     let username = localStorageFallback("username", "User");
 
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws")
-    const client = new Client(socket, uuid, "User");
+    const client = new Client(socket, uuid, username);
     const application = new ClientApplication();
 
     client.websocket.onopen = function() {
       const identify = new ClientSideClientTextInfo("onopen", { uuid: uuid });
       client.socketsend(identify);
+      const nameset = new ClientSideClientTextInfo("nameset", { newname: username });
+      client.socketsend(nameset);
     }
 
     client.websocket.onmessage = function(event) {
@@ -159,7 +161,10 @@
       const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
         e.type = "text";
         e.placeholder = "Enter your name here...";
+        e.value = username;
         e.addEventListener("keydown", function(e) { if (e.key == "Enter") { setName(); } });
+        e.style.width = "20%";
+        e.style.height = "auto";
       });
 
       const nameset = createDocumentElement("button_nameset", "button", function(e) {
@@ -168,6 +173,8 @@
         e.style.position = "absolute";
         e.style.left = "22%";
         e.style.top = "1.09%";
+        e.style.width = "10%";
+        e.style.height = "auto";
       });
       const messagetextbox = createDocumentElement("input_messagetextbox", "input", function(e) {
         e.type = "text";
@@ -177,6 +184,7 @@
       const messagesend = createDocumentElement("button_messagesend", "button", function(e) {
         e.textContent = "Send";
         e.onclick = sendMessage;
+
       });
 
       const messagelist = createDocumentElement("ul_messagelist", "ul");
@@ -191,6 +199,7 @@
         e.style.position = "absolute";
         e.style.left = "85%";
         e.style.top = "2%";
+
       });
 
       const modeswitch = createDocumentElement("button_modeswitch", "button", function (e) {
@@ -214,15 +223,19 @@
           e.style.position = "absolute";
           e.style.left = "33%";
           e.style.top = "1.09%";
+          e.style.width = "10%";
+          e.style.height = "auto";
       });
 
       createDocumentElement("", "p", function (e) {
         e.textContent = "Your UUID: " + uuid;
          e.style.position = "absolute";
-        e.style.left = "53%";
+        e.style.left = "45%";
         e.style.top = "0.5%";
         e.style.fontSize = "60%";
-      })
+        e.style.width = "20%";
+        e.style.height = "auto";
+      });
 
       return {
           nametextbox,
@@ -246,6 +259,7 @@
         return;
       }
       client.username = nametextbox.value;
+      localStorage.setItem("username", client.username);
       nametextbox.placeholder = "Currently chatting as " + client.username;
       const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
       client.socketsend(nameset)
