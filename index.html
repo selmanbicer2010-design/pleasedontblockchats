@@ -262,6 +262,10 @@
         });
         return;
       }
+      if (client.username == nametextbox.value)
+      {
+        return;
+      }
       let oldusername = client.username;
       client.username = nametextbox.value;
       localStorage.setItem("username", client.username);
