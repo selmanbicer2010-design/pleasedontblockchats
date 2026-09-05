@@ -70,16 +70,15 @@
         localStorage.setItem("userId", userId);
     }
 
-    const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws");
+    const client = new Client(new WebSocket("wss://pleasedontblockchats.onrender.com/ws"), userId, "");
+    let messages = [];
 
-    const client = new Client(socket, userId, "");
-
-    socket.onopen = function() {
+    client.socket.onopen = function() {
       const identify = new ClientSideClientTextInfo("identify", { userId: userId });
       socket.send(identify.jsonstr());
     }
 
-    socket.onmessage = function(event) {
+    client.socket.onmessage = function(event) {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const parsed = JSON.parse(event.data);
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
@@ -87,7 +86,7 @@
       render();
     };
 
-    let messages = [];
+
 
     const NULL_SCENE = 0;
     const TEXTING_SCENE = 1;
@@ -177,7 +176,7 @@
       client.username = nametextbox.value;
       nametextbox.placeholder = "Currently chatting as " + client.username;
       const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
-      socket.send(nameset.jsonstr())
+      client.socket.send(nameset.jsonstr())
     }
 
     function sendMessage() {
@@ -195,7 +194,7 @@
       const messagetextbox = textingscene.elements.messagetextbox;
       if (messagetextbox.value.trim() == "") return;
       const message = new ClientSideClientTextInfo("chat", { sender: client.username, body: messagetextbox.value });
-      socket.send(message.jsonstr());
+      client.socket.send(message.jsonstr());
       messagetextbox.value = "";
     }
 
@@ -205,6 +204,7 @@
       messagelist.innerHTML = "";
       for (let i = messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
+        console.log(typeof messages[i])
         li.textContent = messages[i].sender + ": " + messages[i].body;
         messagelist.appendChild(li);
       }
