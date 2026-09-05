@@ -38,11 +38,11 @@
 </head>
 <body>
     <script>
-    class Client {
-      constructor(websocket, uuid, username) {
-        this.websocket = websocket;
-        this.uuid = uuid;
-        this.username = username;
+    class ClientApplication
+    {
+      constructor() {
+        this.messages = [];
+        this.userlist = [];
       }
     }
 
@@ -63,6 +63,18 @@
       }
     }
 
+    class Client {
+      constructor(websocket, uuid, username) {
+        this.websocket = websocket;
+        this.uuid = uuid;
+        this.username = username;
+      }
+
+      socketsend(message) {
+        this.websocket.send(message.jsonstr())
+      }
+    }
+
     let userId = localStorage.getItem("userId");
 
     if (!userId) {
@@ -71,12 +83,12 @@
     }
 
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws")
-    const client = new Client(socket, userId, "");
-    let messages = [];
+    const client = new Client(socket, userId, "User");
+    const application = new ClientApplication();
 
     client.websocket.onopen = function() {
-      const identify = new ClientSideClientTextInfo("identify", { userId: userId });
-      socket.send(identify.jsonstr());
+      const identify = new ClientSideClientTextInfo("onopen", { userId: userId });
+      client.socketsend(identify);
     }
 
     client.websocket.onmessage = function(event) {
@@ -85,12 +97,22 @@
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
       if (info.dict().type == "chat")
       {
-        messages.push(info);
-        render();
+        application.messages.push(info.dict().sender + ": " + info.dict().body);
+        renderChats();
+      }
+      else if (info.dict().type == "userlist")
+      {
+        if (info.dict().mode == "changed" || info.dict().mode == "left")
+        {
+          application.userlist.splice(application.userlist.indexOf(info.dict().oldusername), 1);
+        }
+        if (info.dict().mode == "changed" || info.dict().mode == "joined")
+        {
+          application.userlist.push(info.dict().newusername);
+        }
+        renderUserlist();
       }
     };
-
-
 
     const NULL_SCENE = 0;
     const TEXTING_SCENE = 1;
@@ -147,6 +169,8 @@
 
       const messagelist = createDocumentElement("ul_messagelist", "ul");
 
+      const userlist = createDocumentElement("ul_userlist", "ul");
+
       const logo = createDocumentElement("logo", "img", function(e) {
         e.src = "images/plsdontblockchats.png";
         e.alt = "pleasedontblockchats.com logo";
@@ -160,7 +184,8 @@
       return {
           nametextbox,
           messagetextbox,
-          messagelist
+          messagelist,
+          userlist
         };
     });
 
@@ -180,7 +205,7 @@
       client.username = nametextbox.value;
       nametextbox.placeholder = "Currently chatting as " + client.username;
       const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
-      client.websocket.send(nameset.jsonstr())
+      client.socketsend(nameset)
     }
 
     function sendMessage() {
@@ -198,18 +223,29 @@
       const messagetextbox = textingscene.elements.messagetextbox;
       if (messagetextbox.value.trim() == "") return;
       const message = new ClientSideClientTextInfo("chat", { sender: client.username, body: messagetextbox.value });
-      client.websocket.send(message.jsonstr());
+      client.socketsend(message);
       messagetextbox.value = "";
     }
 
-    function render() {
+    function renderChats() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const messagelist = textingscene.elements.messagelist;
       messagelist.innerHTML = "";
-      for (let i = messages.length - 1; i >= 0; i--) {
+      for (let i = application.messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
-        li.textContent = messages[i].dict().sender + ": " + messages[i].dict().body;
+        li.textContent = application.messages[i];
         messagelist.appendChild(li);
+      }
+    }
+
+    function renderUserlist() {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
+      const userlist = textingscene.elements.userlist;
+      userlist.innerHTML = "";
+      for (let i = 0; i < application.userlist.length; i++) {
+        const li = document.createElement("li");
+        li.textContent = application.userlist[i];
+        userlist.appendChild(li);
       }
     }
 
