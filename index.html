@@ -83,7 +83,7 @@
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const parsed = JSON.parse(event.data);
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
-      if (info.type == "chat")
+      if (info.dict().type == "chat")
       {
         messages.push(info);
         render();
