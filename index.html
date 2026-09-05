@@ -83,8 +83,11 @@
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const parsed = JSON.parse(event.data);
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
-      messages.push(info);
-      render();
+      if (info.type == "chat")
+      {
+        messages.push(info);
+        render();
+      }
     };
 
 
@@ -205,8 +208,7 @@
       messagelist.innerHTML = "";
       for (let i = messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
-        console.log(typeof messages[i])
-        li.textContent = messages[i].sender + ": " + messages[i].body;
+        li.textContent = messages[i].dict().sender + ": " + messages[i].dict().body;
         messagelist.appendChild(li);
       }
     }

@@ -69,7 +69,7 @@ async def chat_endpoint(websocket: WebSocket):
     server.connect(client)
 
     for oldmessage in server.messagehistory:
-        await client.sendtext(oldmessage)
+        await client.sendtext(oldmessage.jsonstr())
 
     try:
         while True:
@@ -82,7 +82,7 @@ async def chat_endpoint(websocket: WebSocket):
                 client.username = parsed["newname"]
             if parsed["type"] == "chat":
                 message = ServerSideClientTextInfo("chat", {"sender": client.username, "body": parsed["body"]})
-                server.messagehistory.append(message.jsonstr())
+                server.messagehistory.append(message)
                 for connectedclient in server.connectedclients.values():
                     try:
                         await connectedclient.sendtext(message.jsonstr())
