@@ -75,19 +75,26 @@
       }
     }
 
-    let userId = localStorage.getItem("userId");
+    function localStorageFallback(itemname, fallback)
+    {
+      let data = localStorage.getItem(itemname);
 
-    if (!userId) {
-        userId = crypto.randomUUID();
-        localStorage.setItem("userId", userId);
+      if (data === null) {
+        data = fallback;
+        localStorage.setItem(itemname, fallback);
+      }
+      return data;
     }
 
+    let uuid = localStorageFallback("uuid", crypto.randomUUID());
+    let username = localStorageFallback("username", "User");
+
     const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws")
-    const client = new Client(socket, userId, "User");
+    const client = new Client(socket, uuid, "User");
     const application = new ClientApplication();
 
     client.websocket.onopen = function() {
-      const identify = new ClientSideClientTextInfo("onopen", { userId: userId });
+      const identify = new ClientSideClientTextInfo("onopen", { uuid: uuid });
       client.socketsend(identify);
     }
 
@@ -124,7 +131,6 @@
         this.sceneenum = sceneenum;
         this.func = func;
         this.elements = null;
-
       }
 
       load() {
@@ -146,6 +152,9 @@
       return object;
     }
 
+    let darkmode = false;
+    let textcolor = '#000000';
+
     const textingscene = new Scene(TEXTING_SCENE, function() {
       const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
         e.type = "text";
@@ -156,6 +165,9 @@
       const nameset = createDocumentElement("button_nameset", "button", function(e) {
         e.textContent = "Set name";
         e.onclick = setName;
+        e.style.position = "absolute";
+        e.style.left = "22%";
+        e.style.top = "1.09%";
       });
       const messagetextbox = createDocumentElement("input_messagetextbox", "input", function(e) {
         e.type = "text";
@@ -180,6 +192,37 @@
         e.style.left = "85%";
         e.style.top = "2%";
       });
+
+      const modeswitch = createDocumentElement("button_modeswitch", "button", function (e) {
+        e.textContent = "Switch to dark mode"
+        e.onclick = function() {
+          darkmode = !darkmode;
+          if (darkmode) {
+            e.textContent = "Switch to light mode"
+            document.body.style.backgroundColor = '#010103';
+            textcolor = '#eeeeee';
+            logo.style.backgroundColor = 'white';
+          }
+          else {
+            e.textContent = "Switch to dark mode"
+            document.body.style.backgroundColor = '#ffffff';
+            textcolor = '#000000';
+          }
+          renderChats();
+          renderUserlist();
+          }
+          e.style.position = "absolute";
+          e.style.left = "33%";
+          e.style.top = "1.09%";
+      });
+
+      createDocumentElement("", "p", function (e) {
+        e.textContent = "Your UUID: " + uuid;
+         e.style.position = "absolute";
+        e.style.left = "53%";
+        e.style.top = "0.5%";
+        e.style.fontSize = "60%";
+      })
 
       return {
           nametextbox,
@@ -233,6 +276,7 @@
       messagelist.innerHTML = "";
       for (let i = application.messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
+        li.style.color = textcolor;
         li.textContent = application.messages[i];
         messagelist.appendChild(li);
       }
@@ -244,6 +288,7 @@
       userlist.innerHTML = "";
       for (let i = 0; i < application.userlist.length; i++) {
         const li = document.createElement("li");
+        li.style.color = textcolor;
         li.textContent = application.userlist[i];
         userlist.appendChild(li);
       }
