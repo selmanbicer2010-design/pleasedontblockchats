@@ -70,15 +70,16 @@
         localStorage.setItem("userId", userId);
     }
 
-    const client = new Client(new WebSocket("wss://pleasedontblockchats.onrender.com/ws"), userId, "");
+    const socket = new WebSocket("wss://pleasedontblockchats.onrender.com/ws")
+    const client = new Client(socket, userId, "");
     let messages = [];
 
-    client.socket.onopen = function() {
+    client.websocket.onopen = function() {
       const identify = new ClientSideClientTextInfo("identify", { userId: userId });
       socket.send(identify.jsonstr());
     }
 
-    client.socket.onmessage = function(event) {
+    client.websocket.onmessage = function(event) {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const parsed = JSON.parse(event.data);
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
@@ -176,7 +177,7 @@
       client.username = nametextbox.value;
       nametextbox.placeholder = "Currently chatting as " + client.username;
       const nameset = new ClientSideClientTextInfo("nameset", { newname: client.username })
-      client.socket.send(nameset.jsonstr())
+      client.websocket.send(nameset.jsonstr())
     }
 
     function sendMessage() {
@@ -194,7 +195,7 @@
       const messagetextbox = textingscene.elements.messagetextbox;
       if (messagetextbox.value.trim() == "") return;
       const message = new ClientSideClientTextInfo("chat", { sender: client.username, body: messagetextbox.value });
-      client.socket.send(message.jsonstr());
+      client.websocket.send(message.jsonstr());
       messagetextbox.value = "";
     }
 
