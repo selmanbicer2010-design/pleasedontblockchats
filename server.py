@@ -109,6 +109,10 @@ async def clientremovedcb(client : Client):
         server.application.userlist.remove(client.username)
     await server.sendtexteachclient(message)
 
+    message = ServerSideClientTextInfo("chat", {"sender": "System", "body": client.username + " has left"})
+    server.application.messagehistory.append(message)
+    await server.sendtexteachclient(message)
+
 server.clientremoved.connect(clientremovedcb)
 
 @server.fastapi.websocket("/ws")

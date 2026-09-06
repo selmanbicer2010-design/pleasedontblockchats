@@ -102,7 +102,7 @@
       client.socketsend(message);
     }
 
-    client.websocket.onclose = function() {
+    client.websocket.onclose = function(event) {
       const message = new ClientSideClientTextInfo("chat", { sender: "System", body: client.username + " has left" });
       client.socketsend(message);
     }
