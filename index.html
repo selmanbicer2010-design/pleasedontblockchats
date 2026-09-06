@@ -203,7 +203,7 @@
             const frame = createDocumentElement("div_stickerselect", "div", function(e) {
               let imagepaths = ["images/sticker_halil.png", "images/sticker_jaylen.png", "images/sticker_heartbreak.png",
                 "images/sticker_tuff.png", "images/sticker_jhiszthragg.png", "images/sticker_timetolockin.png",
-                "images/sticker_tungtungsplash.gif"];
+                "images/sticker_tungtungsplash.gif", "images/sticker_gubby.png"];
               for (let i = 0; i < imagepaths.length; i++)
               {
                 const img = document.createElement("img");
@@ -300,7 +300,7 @@
     function setName() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const nametextbox = textingscene.elements.nametextbox;
-      if (nametextbox.value.trim() == "" || nametextbox.value.includes(":") || nametextbox.value == "System") {
+      if (nametextbox.value.trim() == "" || nametextbox.value.includes(":") || nametextbox.value == "System" || nametextbox.value.length > 20) {
         createDocumentElement("warning", "p", function(e) {
           e.textContent = "Set a valid name!";
           e.style.position = "absolute";
