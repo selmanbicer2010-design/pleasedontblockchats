@@ -15,7 +15,7 @@
           position: absolute;
           left: 2%;
           top: 95%;
-          width: 80%;
+          width: 74.5%;
       }
       #button_messagesend {
         position: absolute;
@@ -156,6 +156,7 @@
 
     let darkmode = false;
     let textcolor = '#000000';
+    let stickerselectopen = false;
 
     const textingscene = new Scene(TEXTING_SCENE, function() {
       const nametextbox = createDocumentElement("input_nametextbox", "input", function(e) {
@@ -187,6 +188,48 @@
         e.textContent = "Send";
         e.onclick = sendMessage;
 
+      });
+
+      const stickerselect = createDocumentElement("button_stickerselect", "button", function(e) {
+        e.onclick = function() {
+          if (stickerselectopen)
+          {
+            document.getElementById("div_stickerselect").remove();
+          }
+          else
+          {
+            const frame = createDocumentElement("div_stickerselect", "div", function(e) {
+              let imagepaths = ["images/sticker_halil.png", "images/sticker_jaylen.png", "images/sticker_heartbreak.png", "images/sticker_tuff.png"];
+              for (let i = 0; i < imagepaths.length; i++)
+              {
+                const img = document.createElement("img");
+                img.src = imagepaths[i];
+                img.style.position = "absolute";
+                img.style.width = "30%";
+                img.style.height = "auto";
+                img.style.left = String(i * 30) + "%";
+                img.style.objectFit = "contain";
+                e.appendChild(img);
+                img.onclick = function(e) {
+                  messagetextbox.value = "[sticker]:[" + imagepaths[i] + "]";
+                  sendMessage();
+                };
+              }
+            });
+            frame.style.position = "absolute";
+            frame.style.width = "10%";
+            frame.style.height = "10%";
+            frame.style.left = "75%";
+            frame.style.top = "80%";
+          };
+          stickerselectopen = !stickerselectopen;
+        };
+        e.textContent = "Stickers";
+        e.style.position = "absolute";
+        e.style.left = "78%";
+        e.style.top = "95%";
+        e.style.width = "5%";
+        e.style.height = "auto";
       });
 
       const messagelist = createDocumentElement("ul_messagelist", "ul");
@@ -303,7 +346,17 @@
       for (let i = application.messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
         li.style.color = textcolor;
-        li.textContent = application.messages[i];
+        if (application.messages[i].startsWith("[sticker]", client.username.length + 2)) {
+          li.textContent = client.username + ": ";
+          let img = document.createElement("img");
+          img.src = application.messages[i].slice(client.username.length + 2 + ("[sticker]:[").length, -1);
+          img.style.width = "3%";
+          img.style.height = "auto";
+          li.appendChild(img);
+        }
+        else {
+          li.textContent = application.messages[i];
+        }
         messagelist.appendChild(li);
       }
     }
