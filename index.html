@@ -296,7 +296,7 @@
     function setName() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const nametextbox = textingscene.elements.nametextbox;
-      if (nametextbox.value.trim() == "") {
+      if (nametextbox.value.trim() == "" || nametextbox.value.includes(":")) {
         createDocumentElement("warning", "p", function(e) {
           e.textContent = "Set a valid name first!";
           e.style.position = "absolute";
@@ -346,10 +346,10 @@
       for (let i = application.messages.length - 1; i >= 0; i--) {
         const li = document.createElement("li");
         li.style.color = textcolor;
-        if (application.messages[i].startsWith("[sticker]", client.username.length + 2)) {
+        if (application.messages[i].startsWith("[sticker]", application.messages[i].indexOf(":") + 2)) {
           li.textContent = client.username + ": ";
           let img = document.createElement("img");
-          img.src = application.messages[i].slice(client.username.length + 2 + ("[sticker]:[").length, -1);
+          img.src = application.messages[i].slice(application.messages[i].indexOf(":") + 2 + ("[sticker]:[").length, -1);
           img.style.width = "3%";
           img.style.height = "auto";
           li.appendChild(img);
