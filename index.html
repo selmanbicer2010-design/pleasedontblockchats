@@ -94,10 +94,17 @@
     const application = new ClientApplication();
 
     client.websocket.onopen = function() {
-      const identify = new ClientSideClientTextInfo("onopen", { uuid: uuid });
+      const identify = new ClientSideClientTextInfo("uuid", { uuid: uuid });
       client.socketsend(identify);
       const nameset = new ClientSideClientTextInfo("nameset", { newname: username });
       client.socketsend(nameset);
+      const message = new ClientSideClientTextInfo("chat", { sender: "System", body: client.username + " has joined" });
+      client.socketsend(message);
+    }
+
+    client.websocket.onclose = function() {
+      const message = new ClientSideClientTextInfo("chat", { sender: "System", body: client.username + " has left" });
+      client.socketsend(message);
     }
 
     client.websocket.onmessage = function(event) {

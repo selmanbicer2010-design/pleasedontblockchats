@@ -134,7 +134,7 @@ async def chat_endpoint(websocket: WebSocket):
             strdata = await client.receivedtext()
             parsed = json.loads(strdata)
 
-            if parsed["type"] == "onopen":
+            if parsed["type"] == "uuid":
                 client.uuid = parsed["uuid"]
             if parsed["type"] == "nameset":
                 before = client.username
