@@ -347,7 +347,7 @@
         const li = document.createElement("li");
         li.style.color = textcolor;
         if (application.messages[i].startsWith("[sticker]", application.messages[i].indexOf(":") + 2)) {
-          li.textContent = client.username + ": ";
+          li.textContent = application.messages[i].slice(0, application.messages[i].indexOf(":")) + ": ";
           let img = document.createElement("img");
           img.src = application.messages[i].slice(application.messages[i].indexOf(":") + 2 + ("[sticker]:[").length, -1);
           img.style.width = "3%";
