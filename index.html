@@ -102,11 +102,6 @@
       client.socketsend(message);
     }
 
-    client.websocket.onclose = function(event) {
-      const message = new ClientSideClientTextInfo("chat", { sender: "System", body: client.username + " has left" });
-      client.socketsend(message);
-    }
-
     client.websocket.onmessage = function(event) {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const parsed = JSON.parse(event.data);
@@ -206,7 +201,9 @@
           else
           {
             const frame = createDocumentElement("div_stickerselect", "div", function(e) {
-              let imagepaths = ["images/sticker_halil.png", "images/sticker_jaylen.png", "images/sticker_heartbreak.png", "images/sticker_tuff.png"];
+              let imagepaths = ["images/sticker_halil.png", "images/sticker_jaylen.png", "images/sticker_heartbreak.png",
+                "images/sticker_tuff.png", "images/sticker_jhiszthragg.png", "images/sticker_timetolockin.png",
+                "images/sticker_tungtungsplash.gif"];
               for (let i = 0; i < imagepaths.length; i++)
               {
                 const img = document.createElement("img");
@@ -303,9 +300,9 @@
     function setName() {
       if (CURRENT_SCENE != TEXTING_SCENE) return;
       const nametextbox = textingscene.elements.nametextbox;
-      if (nametextbox.value.trim() == "" || nametextbox.value.includes(":")) {
+      if (nametextbox.value.trim() == "" || nametextbox.value.includes(":") || nametextbox.value == "System") {
         createDocumentElement("warning", "p", function(e) {
-          e.textContent = "Set a valid name first!";
+          e.textContent = "Set a valid name!";
           e.style.position = "absolute";
           e.style.left = "50%";
           e.style.top = "50%";
