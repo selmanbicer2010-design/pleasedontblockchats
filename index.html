@@ -34,6 +34,18 @@
         display: flex;
         flex-direction: column-reverse;
       }
+      #ul_systemmessagelist {
+        position: absolute;
+        bottom: 10%;
+        left: 84%;
+        width: 80%;
+        max-height: 40%;
+        font-size: 10px;
+        overflow-y: auto;
+        list-style: none;
+        display: flex;
+        flex-direction: column-reverse;
+      }
     </style>
 </head>
 <body>
@@ -43,6 +55,7 @@
       constructor() {
         this.messages = [];
         this.userlist = [];
+        this.systemmessages = [];
       }
     }
 
@@ -108,8 +121,14 @@
       const info = new ClientSideClientTextInfo(parsed.type, parsed);
       if (info.dict().type == "chat")
       {
-        application.messages.push(info.dict().sender + ": " + info.dict().body);
+        if (info.dict().sender === "System") {
+            application.systemmessages.push(info.dict().sender + ": " + info.dict().body);
+        }
+        else {
+            application.messages.push(info.dict().sender + ": " + info.dict().body);
+        }
         renderChats();
+        renderSystemMessages();
       }
       else if (info.dict().type == "userlist")
       {
@@ -237,6 +256,7 @@
       });
 
       const messagelist = createDocumentElement("ul_messagelist", "ul");
+      const systemmessagelist = createDocumentElement("ul_systemmessagelist", "ul");
 
       const userlist = createDocumentElement("ul_userlist", "ul", function (e) {
         e.style.position = "absolute";
@@ -270,6 +290,7 @@
             textcolor = '#000000';
           }
           renderChats();
+          renderSystemMessages();
           renderUserlist();
           }
           e.style.position = "absolute";
@@ -293,7 +314,8 @@
           nametextbox,
           messagetextbox,
           messagelist,
-          userlist
+          userlist,
+          systemmessagelist
         };
     });
 
@@ -360,6 +382,28 @@
         }
         else {
           li.textContent = application.messages[i];
+        }
+        messagelist.appendChild(li);
+      }
+    }
+
+    function renderSystemMessages() {
+      if (CURRENT_SCENE != TEXTING_SCENE) return;
+      const messagelist = textingscene.elements.systemmessagelist;
+      messagelist.innerHTML = "";
+      for (let i = application.systemmessages.length - 1; i >= 0; i--) {
+        const li = document.createElement("li");
+        li.style.color = textcolor;
+        if (application.systemmessages[i].startsWith("[sticker]", application.systemmessages[i].indexOf(":") + 2)) {
+          li.textContent = application.systemmessages[i].slice(0, application.systemmessages[i].indexOf(":")) + ": ";
+          let img = document.createElement("img");
+          img.src = application.systemmessages[i].slice(application.systemmessages[i].indexOf(":") + 2 + ("[sticker]:[").length, -1);
+          img.style.width = "3%";
+          img.style.height = "auto";
+          li.appendChild(img);
+        }
+        else {
+          li.textContent = application.systemmessages[i];
         }
         messagelist.appendChild(li);
       }
